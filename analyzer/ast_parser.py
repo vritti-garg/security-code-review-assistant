@@ -21,13 +21,13 @@ class ASTParser:
         Walks the AST and extracts raw signals.
         Returns a list of dictionaries.
         """
-        signals = []
+        signals = [] #save raw data
 
         for node in ast.walk(self.tree):
 
             # Function definitions
             if isinstance(node, ast.FunctionDef):
-                signals.append({
+                signals.append({ 
                     "type": "function_def",
                     "name": node.name,
                     "line": node.lineno
@@ -36,9 +36,9 @@ class ASTParser:
             # Function calls
             if isinstance(node, ast.Call):
                 if isinstance(node.func, ast.Name):
-                    signals.append({
+                    signals.append({ 
                         "type": "call",
-                        "name": node.func.id,
+                        "name": node.func.id, 
                         "line": node.lineno
                     })
 
@@ -49,5 +49,5 @@ class ASTParser:
                         "line": node.lineno
                     })
 
-        return signals
+        return signals #send signal 
 

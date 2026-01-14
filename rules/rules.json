@@ -1,8 +1,9 @@
 {
   "SYSTEM_CALL": {
+    "id": "R001",
     "risk_category": "System Call",
-    "apis": ["system", "popen", "run", "call"],
-    "reason": "Executes operating system commands which may lead to command injection or remote code execution.",
+    "triggers": ["system", "popen", "run", "call"],
+    "reason": "Executes operating system commands directly which may lead to command injection or remote code execution.",
     "review_checklist": [
       "Ensure no user-controlled input is passed to the command",
       "Avoid shell execution unless absolutely necessary",
@@ -11,24 +12,39 @@
   },
 
   "FILE_OPERATION": {
+    "id": "R002",
     "risk_category": "File Operation",
-    "apis": ["open"],
+    "triggers": ["open", "write", "read"],
     "reason": "Handles file system access which may expose sensitive files or allow path traversal.",
     "review_checklist": [
       "Validate file paths and filenames",
       "Ensure user input is not directly used in file paths",
-      "Restrict accessible directories"
+      "Restrict accessible directories",
+      "Is the file type/extension validated?"
     ]
   },
 
   "INPUT_HANDLING": {
+    "id": "R003",
     "risk_category": "Input Handling",
-    "apis": ["input"],
+    "triggers": ["input"],
     "reason": "Processes untrusted input that may influence sensitive operations.",
     "review_checklist": [
       "Apply strict input validation",
       "Avoid passing raw input to sensitive functions",
       "Check for sanitization or normalization"
+    ]
+  },
+
+  "AUTHENTICATION_LOGIC" : {
+    "id": "R004",
+    "risk_category": "Authentication Logic",
+    "triggers": ["login", "auth", "verify_password", "authenticate"],
+    "node_type": "FunctionDef",
+    "reason": "Critical security logic related to identity.",
+    "review_checklist": [
+      "Are passwords being hashed?",
+      "Is session management secure?"
     ]
   }
 }
