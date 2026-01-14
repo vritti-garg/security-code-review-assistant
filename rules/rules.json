@@ -1,1 +1,35 @@
+{
+  "SYSTEM_CALL": {
+    "risk_category": "System Call",
+    "apis": ["system", "popen", "run", "call"],
+    "reason": "Executes operating system commands which may lead to command injection or remote code execution.",
+    "review_checklist": [
+      "Ensure no user-controlled input is passed to the command",
+      "Avoid shell execution unless absolutely necessary",
+      "Verify least-privilege execution context"
+    ]
+  },
+
+  "FILE_OPERATION": {
+    "risk_category": "File Operation",
+    "apis": ["open"],
+    "reason": "Handles file system access which may expose sensitive files or allow path traversal.",
+    "review_checklist": [
+      "Validate file paths and filenames",
+      "Ensure user input is not directly used in file paths",
+      "Restrict accessible directories"
+    ]
+  },
+
+  "INPUT_HANDLING": {
+    "risk_category": "Input Handling",
+    "apis": ["input"],
+    "reason": "Processes untrusted input that may influence sensitive operations.",
+    "review_checklist": [
+      "Apply strict input validation",
+      "Avoid passing raw input to sensitive functions",
+      "Check for sanitization or normalization"
+    ]
+  }
+}
 
