@@ -17,6 +17,7 @@
     "triggers": ["open", "write", "read"],
     "reason": "Handles file system access which may expose sensitive files or allow path traversal.",
     "review_checklist": [
+      
       "Validate file paths and filenames",
       "Ensure user input is not directly used in file paths",
       "Restrict accessible directories",

@@ -1,39 +1,72 @@
 from analyzer.ast_parser import ASTParser
 from engine.rule_engine import RuleEngine
-import json
+
+def print_report(findings):
+    if not findings:
+        print("\n Clean Code! No risks detected.")
+        return
+
+    # Sort: Critical issues first
+    findings.sort(key=lambda x: "Combined" in x['risk'], reverse=True)
+    
+    # Count criticals
+    critical_count = sum(1 for f in findings if "Combined" in f['risk'])
+
+    print(f"\n{'='*60}")
+    print(f"SECURITY REVIEW REPORT — {len(findings)} Issues Detected")
+    if critical_count > 0:
+        print(f"{critical_count} CRITICAL ISSUES FOUND")
+    print(f"{'='*60}\n")
+
+    for f in findings:
+        # Check if it is a Critical Combined Risk
+        is_critical = "Combined" in f['risk']
+        
+        if is_critical:
+            print(f"🔴 [CRITICAL] {f['risk']}")
+            print(f"\nLocation:")
+            print(f"  Function: {f['function']}")
+            print(f"  Lines:    {f['line']}") # Shows range now
+            
+            print(f"\nWhy this matters:")
+            # Wrap text nicely
+            print(f"  {f['reason']}")
+            
+            print(f"\nTrigger Evidence:")
+            # Use the new evidence list we created in rule_engine
+            for ev in f.get('evidence', ["Risk detected"]):
+                print(f"  - {ev}")
+
+        else:
+            # Standard output for normal warnings
+            print(f"  [WARNING] {f['risk']}")
+            print(f"  Function: {f['function']} (Line {f['line']})")
+            print(f"  Reason:   {f['reason']}")
+
+        # Checklist for both
+        print(f"\nReviewer Checklist:")
+        for item in f['checklist']:
+            print(f"  - [ ] {item}")
+            
+        print("\n" + "-" * 60 + "\n")
+
 
 def main():
-    print("Starting Security Scan...\n")
     # Read sample demo file 
     try:
         with open("sample.py", "r") as f:
             source_code = f.read()
     except FileNotFoundError:
-        print("🔴Error: 'sample.py' file nahi mili!")
+        print("Error: 'sample.py' not found.")
         return
 
     parser = ASTParser(source_code)
     signals = parser.extract_signals()
-    print(f"Found {len(signals)} AST signals.")
     
     engine = RuleEngine("rules/rules.json")
     findings = engine.apply_rules(signals)
 
-    if findings:
-        print(f"\n Found {len(findings)} Security Issues:\n")
-        for i, f in enumerate(findings, 1):
-            print(f"[{i}] Rule ID: {f['id']} | Risk: {f['risk']}")
-            print(f"    Line: {f['line']} | Trigger: {f['trigger_found']}")
-            print(f"    Reason: {f['reason']}")
-            print("-" * 30)
-    else:
-        print("\n No issues found!")
-
+    print_report(findings)
 
 if __name__ == "__main__":
     main()
-
-
-
-
-

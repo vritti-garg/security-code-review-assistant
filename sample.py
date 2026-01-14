@@ -1,12 +1,14 @@
 import os
 
-# 1. Auth Risk (FunctionDef)
-def login_user(username, password):
-    # 2. Input Risk (Call)
-    cmd = input("Enter command: ")
+def backup_data():
+    # This is safe (Hardcoded) - Triggers R001
+    os.system("tar -czf backup.tar.gz /data")
+
+def malicious_admin_tool():
+    # This triggers R003 (Input)
+    cmd = input("Enter command to run: ")
     
-    # 3. System Call Risk (Call)
     os.system(cmd)
 
-# 4. File Risk (Call)
-f = open("data.txt", "r")
+def safe_function():
+    print("Just printing stuff")
