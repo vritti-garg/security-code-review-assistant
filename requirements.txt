@@ -1,1 +1,1 @@
-(no dependencies) 
+# Uses Python standard library only
