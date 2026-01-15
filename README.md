@@ -60,6 +60,7 @@ security-code-review-assistant/
 │
 ├── sample.py                # Demo input file
 ├── main.py                  # CLI entry point
+├── LICENSE
 ├── .gitignore
 └── requirements.txt
 
