@@ -1,0 +1,19 @@
+[
+    {
+        "id": "R001",
+        "risk": "System Call",
+        "trigger": "system",
+        "line": 2,
+        "function": "cleanup",
+        "func_start": 1,
+        "func_end": 2,
+        "reason": "Executes operating system commands directly which may lead to command injection or remote code execution.",
+        "checklist": [
+            "Ensure no user-controlled input is passed to the command",
+            "Avoid shell execution unless absolutely necessary",
+            "Verify least-privilege execution context"
+        ],
+        "severity": "MEDIUM",
+        "confidence": "MEDIUM"
+    }
+]

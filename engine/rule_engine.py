@@ -25,14 +25,31 @@ class RuleEngine:
                         is_match = True
 
                 if is_match:
+                    # If it's just a Name Match (Heuristic) -> LOW/LOW
+                    if signal["type"] == "function_def":
+                        sev = "LOW"
+                        conf = "LOW" 
+                    # 2. Input Handling (Source) -> LOW Severity, MEDIUM Confidence
+                    elif rule["risk_category"] == "Input Handling":
+                        sev = "LOW"
+                        conf = "MEDIUM"
+                    # If it's a specific API Call -> MEDIUM/MEDIUM
+                    else:
+                        sev = "MEDIUM"
+                        conf = "MEDIUM"
+
                     findings.append({
                         "id": rule["id"],
                         "risk": rule["risk_category"],
                         "trigger": signal["name"],
                         "line": signal["line"],
                         "function": signal.get("function", "Global Scope"),
+                        "func_start": signal.get("func_start"), 
+                        "func_end": signal.get("func_end"),
                         "reason": rule["reason"],
-                        "checklist": rule["review_checklist"]
+                        "checklist": rule["review_checklist"],
+                        "severity": sev,
+                        "confidence": conf,
                     })
 
         # --- PHASE 2: Heuristic Correlation (Combined Risk) ---
@@ -62,43 +79,65 @@ class RuleEngine:
 
         # 2. Combinations check karein
         for func_name, func_findings in function_map.items():
+            risks = {f["risk"] for f in func_findings}
             
             # Yahan check kar rahe hain ki kya 'func_findings' ek list hai
             # aur uske andar dictionaries hain.
             
-            risks = set()
-            for f in func_findings:
-                risks.add(f["risk"]) # Yahan error aa raha tha, ab thik chalega
+            severity = "LOW"
+            confidence = "LOW"
+            is_combined = False
+            title = ""
+            reason = ""
 
-            # Agar ek hi function mein Input bhi hai aur System Call bhi...
-            if "Input Handling" in risks and "System Call" in risks:
-                
+            # Scenario A : Input + System + Auth (CRITICAL)
+            if "Input Handling" in risks and "System Call" in risks and "Authentication Logic" in risks:
+                severity = "CRITICAL"
+                confidence = "HIGH"
+                is_combined = True
+                title = "CRITICAL RISK: Unsafe Auth & Command Execution"
+                reason = "Heuristic analysis detected Authentication logic mixing Input with System Calls."
+            
+            # Scenario B : Input + System (HIGH)
+            elif "Input Handling" in risks and "System Call" in risks:
+                severity = "HIGH"
+                confidence = "HIGH"
+                is_combined = True
+                title = "HIGH RISK: Potential Command Injection"
+                reason = "Function accepts untrusted input and performs System Calls. If input is not sanitized, this leads to RCE."
+
+            # Scenario C: Input + File (HIGH) -> Solves 'upload_file' case
+            elif "Input Handling" in risks and "File Operation" in risks:
+                severity = "MEDIUM"  # <--- CHANGED HERE
+                confidence = "HIGH"  # Still HIGH because we have 2 signals
+                is_combined = True
+                title = "MEDIUM RISK: Potential Path Traversal"
+                reason = "Function uses untrusted input to access the File System. This may allow unauthorized file creation or overwriting."
+
+            # Use Combined Logic
+            if is_combined:
                 # Line Range Calculate karein
-                lines = [f["line"] for f in func_findings if f["risk"] in ["Input Handling", "System Call"]]
-                
+                lines = [f["line"] for f in func_findings]
                 # Handle case where lines might be empty (rare but safe to check)
-                if lines:
-                    line_range = f"{min(lines)} - {max(lines)}"
-                else:
-                    line_range = "Unknown"
+                line_range = f"{min(lines)} - {max(lines)}" if lines else "Unknown"
 
                 extra_findings.append({
-                    "id": "CRITICAL_01",
-                    "risk": "Combined Risk: Untrusted Input in System Command Execution",
-                    "trigger": "Input + System Call",
+                    "id": "CRITICAL_COMBINED",
+                    "risk": title,
+                    "trigger": "Multiple Signals",
                     "line": line_range,
                     "function": func_name,
-                    "reason": "Untrusted input flowing into system commands can allow attackers to execute arbitrary OS-level commands.",
-                    "evidence": [
-                        "Input Handling detected",
-                        "System Command execution detected"
-                    ],
+                    "func_start": func_start, # 👇 PASS FUNCTION START
+                    "func_end": func_end,
+                    "reason": f"Heuristic analysis detected multiple risk factors ({', '.join(risks)}) in the same function context.",
+                    "evidence": [f["trigger"] for f in func_findings],
                     "checklist": [
-                        "Trace how user input is constructed",
-                        "Verify whether input reaches command execution",
-                        "Check for validation or sanitization",
-                        "Ensure shell execution is not used"
-                    ]
+                        "Review entire function flow",
+                        "Ensure Input is sanitized before System Call",
+                        "Verify Authentication logic is not bypassed"
+                    ],
+                    "severity": severity,       # 👈 Calculated
+                    "confidence": confidence    # 👈 Calculated
                 })
-        
+
         return extra_findings

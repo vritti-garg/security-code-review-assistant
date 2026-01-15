@@ -1,26 +1,37 @@
 # Security-code-review-assistant
-AST-based assistive security tool that flags **security-sensitive code paths** and provides **review guidance** for manual code reviews.
+AST-based assistive security tool that that helps developers and security reviewers identify **security-sensitive code paths** during **manual code reviews**.
 
-## 🚨 Important
-This tool does **NOT** detect or confirm vulnerabilities.
+> ⚠️ This tool does NOT claim to detect vulnerabilities.
+> It provides **review guidance**, not verdicts.
 
-It flags **security-relevant code regions** that require **human review**.
-
-## 🎯 Purpose
-Many security issues arise from subtle logic mistakes in:
-- Authentication
-- Input handling
-- Database access
-- File operations
+---
+## Purpose
+Many real-world security issues arise from subtle logic flaws involving:
+- User input handling
 - System command execution
+- File system access
+- Authentication logic
 
-This tool highlights such areas and explains **what to review and why**.
+This tool highlights **review-worthy areas** and explains:
+- **Where** the risk exists
+- **Why** it matters
+- **What** a reviewer should check
 
-## 🧠 How It Works
-1. Parses Python source code using the Abstract Syntax Tree (AST)
-2. Extracts functions, imports, and function calls
-3. Applies rule-based security interpretation
-4. Generates structured review findings
+---
+
+##  How It Works
+
+1. Parses Python source code using the **Abstract Syntax Tree (AST)**
+2. Extracts raw signals such as:
+   - Function definitions
+   - Function calls
+3. Applies **rule-based security interpretation**
+4. Correlates signals **at function level**
+5. Produces **review-grade findings** with:
+   - Severity
+   - Confidence
+   - Evidence
+   - Reviewer checklist
 
 ## ❌ What It Does NOT Do
 - No exploit detection

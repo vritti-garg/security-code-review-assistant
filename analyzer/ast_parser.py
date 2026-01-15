@@ -18,6 +18,9 @@ class ASTParser(ast.NodeVisitor):
         self.signals = []
         # State variable to track where we are currently looking
         self.current_function = "Global Scope" 
+        # New: Track Function Boundaries
+        self.current_func_start = None
+        self.current_func_end = None
 
     def extract_signals(self):
         """
@@ -32,23 +35,32 @@ class ASTParser(ast.NodeVisitor):
         """
         Runs when the parser sees a function definition (def name():).
         """
+        # 1. Capture Function Boundaries
+        previous_function = self.current_function
+        previous_start = self.current_func_start
+        previous_end = self.current_func_end
+
+        self.current_function = node.name
+        self.current_func_start = node.lineno
+        self.current_func_end = node.end_lineno
+
         # 1. Record the function definition itself (For Rule 4 - Auth Logic)
         self.signals.append({
             "type": "function_def",
             "name": node.name,
             "line": node.lineno,
-            "function": self.current_function # In case of nested functions
+            "function": self.current_function, # In case of nested functions
+            "func_start": self.current_func_start, # Pass context
+            "func_end": self.current_func_end      # Pass context
         })
 
-        # 2. Context Tracking: Update state to current function name
-        previous_function = self.current_function
-        self.current_function = node.name
-
-        # 3. Continue looking inside this function
+        # 3. Visit children
         self.generic_visit(node)
 
         # 4. Context Tracking: Restore state when leaving the function
         self.current_function = previous_function
+        self.current_func_start = previous_start
+        self.current_func_end = previous_end
 
     def visit_Call(self, node):
         """
@@ -70,7 +82,10 @@ class ASTParser(ast.NodeVisitor):
                 "name": func_name, 
                 "line": node.lineno,
                 # THE UPGRADE: Attaching the context
-                "function": self.current_function 
+                "function": self.current_function,
+                # ATTACH BOUNDARIES TO EVERY CALL
+                "func_start": self.current_func_start,
+                "func_end": self.current_func_end
             })
 
         # Continue looking inside arguments (e.g. print(input()))
