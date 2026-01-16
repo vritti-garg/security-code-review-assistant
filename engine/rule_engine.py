@@ -66,23 +66,23 @@ class RuleEngine:
         function_map = {}
         extra_findings = []
 
-        # 1. Findings ko Function ke naam se group karein
+        # 1. match findings and Function by names
         for f in findings:
             func_name = f.get("function", "Global Scope")
             
-            # Agar ye function pehli baar dikha hai, toh empty list banayein
+            # if func is seen for first time, create an empty list
             if func_name not in function_map:
                 function_map[func_name] = []
             
-            # IMP: List mein append kar rahe hain (Dictionary nahi assign kar rahe)
+            # IMP: appending in list(not directory)
             function_map[func_name].append(f)
 
-        # 2. Combinations check karein
+        # 2. Check combinations 
         for func_name, func_findings in function_map.items():
             risks = {f["risk"] for f in func_findings}
             
-            # Yahan check kar rahe hain ki kya 'func_findings' ek list hai
-            # aur uske andar dictionaries hain.
+            # checking if 'func_findings' is a list
+            #and if it has directories in it
             
             severity = "LOW"
             confidence = "LOW"
@@ -108,8 +108,8 @@ class RuleEngine:
 
             # Scenario C: Input + File (HIGH) -> Solves 'upload_file' case
             elif "Input Handling" in risks and "File Operation" in risks:
-                severity = "MEDIUM"  # <--- CHANGED HERE
-                confidence = "HIGH"  # Still HIGH because we have 2 signals
+                severity = "MEDIUM"
+                confidence = "HIGH" 
                 is_combined = True
                 title = "MEDIUM RISK: Potential Path Traversal"
                 reason = "Function uses untrusted input to access the File System. This may allow unauthorized file creation or overwriting."
@@ -127,7 +127,7 @@ class RuleEngine:
                     "trigger": "Multiple Signals",
                     "line": line_range,
                     "function": func_name,
-                    "func_start": func_start, # 👇 PASS FUNCTION START
+                    "func_start": func_start, #  PASS FUNCTION START
                     "func_end": func_end,
                     "reason": f"Heuristic analysis detected multiple risk factors ({', '.join(risks)}) in the same function context.",
                     "evidence": [f["trigger"] for f in func_findings],
@@ -136,8 +136,8 @@ class RuleEngine:
                         "Ensure Input is sanitized before System Call",
                         "Verify Authentication logic is not bypassed"
                     ],
-                    "severity": severity,       # 👈 Calculated
-                    "confidence": confidence    # 👈 Calculated
+                    "severity": severity,      
+                    "confidence": confidence 
                 })
 
         return extra_findings
