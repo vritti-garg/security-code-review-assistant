@@ -18,7 +18,6 @@ def group_findings_by_function(findings):
                 "findings": [],
                 "max_severity": "LOW",
                 "max_confidence": "LOW",
-                # New: Store function boundaries
                 "start": f.get("func_start"),
                 "end": f.get("func_end")
             }
@@ -40,7 +39,7 @@ def group_findings_by_function(findings):
 
 def print_cli_report(findings):
     if not findings:
-        print("\n✅ Clean Code! No risks detected.")
+        print("\n Clean Code! No risks detected.")
         return
     
     grouped_data = group_findings_by_function(findings)
